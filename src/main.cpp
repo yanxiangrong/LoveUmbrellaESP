@@ -36,12 +36,15 @@ unsigned long lastUnlock = 0;
 bool lockStatus = false;
 
 void beep() {
+    pinMode(BEEP_PIN, OUTPUT);
     analogWrite(BEEP_PIN, 128);
     delay(100);
     digitalWrite(BEEP_PIN, LOW);
+    pinMode(BEEP_PIN, INPUT);
 }
 
 void beebee() {
+    pinMode(BEEP_PIN, OUTPUT);
     analogWrite(BEEP_PIN, 128);
     delay(150);
     digitalWrite(BEEP_PIN, LOW);
@@ -49,12 +52,15 @@ void beebee() {
     analogWrite(BEEP_PIN, 128);
     delay(150);
     digitalWrite(BEEP_PIN, LOW);
+    pinMode(BEEP_PIN, INPUT);
 }
 
 void beee() {
+    pinMode(BEEP_PIN, OUTPUT);
     analogWrite(BEEP_PIN, 128);
     delay(1000);
     digitalWrite(BEEP_PIN, LOW);
+    pinMode(BEEP_PIN, INPUT);
 }
 
 void connectWiFi() {
@@ -70,6 +76,8 @@ void connectWiFi() {
     } else {
         WiFi.begin(ssid);
     }
+
+    WiFi.setSleepMode(WIFI_LIGHT_SLEEP);
 
     int i = 60;
     while (WiFi.status() != WL_CONNECTED and i) {
@@ -92,6 +100,7 @@ void connectWiFi() {
 }
 
 int udpSendOut(const char *pBuf, int lSize, ikcpcb *pKCP, void *pCTX) {
+    pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
 
     Udp.beginPacket(host, port);
@@ -101,6 +110,7 @@ int udpSendOut(const char *pBuf, int lSize, ikcpcb *pKCP, void *pCTX) {
     delay(20);
 
     digitalWrite(LED_BUILTIN, HIGH);
+    pinMode(LED_BUILTIN, INPUT);
     return 0;
 }
 
@@ -113,6 +123,7 @@ void sendData() {
 void checkNetwork() {
     static int lastReconnected = 0;
     if (!WiFi.isConnected() and ((millis() - lastReconnected) / 1000 >= reconnectTime)) {
+        pinMode(LED_BUILTIN, OUTPUT);
         digitalWrite(LED_BUILTIN, LOW);
 
         connectWiFi();
@@ -122,6 +133,7 @@ void checkNetwork() {
             reconnectTime *= 2;
         }
         digitalWrite(LED_BUILTIN, HIGH);
+        pinMode(LED_BUILTIN, INPUT);
     }
 }
 
@@ -131,6 +143,9 @@ int lock() {
     }
 
     unsigned long startTime = millis();
+
+    pinMode(MOTOR_A_PIN, OUTPUT);
+    pinMode(MOTOR_B_PIN, OUTPUT);
 
     digitalWrite(MOTOR_A_PIN, LOW);
     digitalWrite(MOTOR_B_PIN, HIGH);
@@ -142,6 +157,9 @@ int lock() {
             delay(100);
             digitalWrite(MOTOR_A_PIN, LOW);
             digitalWrite(MOTOR_B_PIN, LOW);
+
+            pinMode(MOTOR_A_PIN, INPUT);
+            pinMode(MOTOR_B_PIN, INPUT);
             beep();
             lockStatus = true;
             return 0;
@@ -154,6 +172,9 @@ int lock() {
     delay(100);
     digitalWrite(MOTOR_A_PIN, LOW);
     digitalWrite(MOTOR_B_PIN, LOW);
+
+    pinMode(MOTOR_A_PIN, INPUT);
+    pinMode(MOTOR_B_PIN, INPUT);
     beee();
     lockStatus = true;
     return -1;
@@ -164,6 +185,9 @@ void unlock() {
         return;
     }
 
+    pinMode(MOTOR_A_PIN, OUTPUT);
+    pinMode(MOTOR_B_PIN, OUTPUT);
+
     digitalWrite(MOTOR_A_PIN, HIGH);
     digitalWrite(MOTOR_B_PIN, LOW);
     delay(1000);
@@ -172,6 +196,9 @@ void unlock() {
     delay(100);
     digitalWrite(MOTOR_A_PIN, LOW);
     digitalWrite(MOTOR_B_PIN, LOW);
+
+    pinMode(MOTOR_A_PIN, INPUT);
+    pinMode(MOTOR_B_PIN, INPUT);
 
     lastUnlock = millis();
     lockStatus = false;
@@ -284,11 +311,8 @@ void checkVcc() {
 void setup() {
     uint32_t conv;
 
-    pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(MOTOR_A_PIN, OUTPUT);
-    pinMode(MOTOR_B_PIN, OUTPUT);
     pinMode(MOTOR_LIM_PIN, INPUT);
-    pinMode(BEEP_PIN, OUTPUT);
+    pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
 
     beep();
@@ -334,6 +358,7 @@ void setup() {
     lastResponse = millis();
     beebee();
     digitalWrite(LED_BUILTIN, HIGH);
+    pinMode(LED_BUILTIN, INPUT);
 }
 
 void loop() {
